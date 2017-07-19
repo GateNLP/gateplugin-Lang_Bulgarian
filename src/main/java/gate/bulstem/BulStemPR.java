@@ -13,22 +13,10 @@
  */
 package gate.bulstem;
 
-import gate.Annotation;
-import gate.AnnotationSet;
-import gate.ProcessingResource;
-import gate.Resource;
-import gate.Utils;
-import gate.creole.AbstractLanguageAnalyser;
-import gate.creole.ExecutionException;
-import gate.creole.ResourceInstantiationException;
-import gate.creole.metadata.CreoleParameter;
-import gate.creole.metadata.CreoleResource;
-import gate.creole.metadata.Optional;
-import gate.creole.metadata.RunTime;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.util.HashMap;
@@ -39,6 +27,20 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+
+import gate.Annotation;
+import gate.AnnotationSet;
+import gate.ProcessingResource;
+import gate.Resource;
+import gate.Utils;
+import gate.creole.AbstractLanguageAnalyser;
+import gate.creole.ExecutionException;
+import gate.creole.ResourceInstantiationException;
+import gate.creole.ResourceReference;
+import gate.creole.metadata.CreoleParameter;
+import gate.creole.metadata.CreoleResource;
+import gate.creole.metadata.Optional;
+import gate.creole.metadata.RunTime;
 
 /**
  * Stemming algorithm by Preslav Nakov.
@@ -55,7 +57,7 @@ public class BulStemPR extends AbstractLanguageAnalyser implements
 
   protected Logger logger = Logger.getLogger(this.getClass());
 
-  private URL rulesURL;
+  private ResourceReference rulesURL;
 
   private String annotationSetName;
 
@@ -84,9 +86,9 @@ public class BulStemPR extends AbstractLanguageAnalyser implements
 
     stemmingRules = new HashMap<String, String>();
 
-    BufferedReader br = null;
-    try {
-      br = new BufferedReader(new InputStreamReader(rulesURL.openStream()));
+    
+    try (BufferedReader br= new BufferedReader(new InputStreamReader(rulesURL.openStream()))){
+      
       String s = null;
       while((s = br.readLine()) != null) {
         Matcher m = p.matcher(s);
@@ -98,8 +100,6 @@ public class BulStemPR extends AbstractLanguageAnalyser implements
       }
     } catch(Exception e) {
       throw new ResourceInstantiationException(e);
-    } finally {
-      if(br != null) IOUtils.closeQuietly(br);
     }
 
     return this;
@@ -173,11 +173,20 @@ public class BulStemPR extends AbstractLanguageAnalyser implements
 
   // PR parameters
   @CreoleParameter(comment = "Stemming Rules File", defaultValue = "resources/stem_rules_context_2_UTF-8.txt")
-  public void setPathToRules(URL rulesURL) {
+  public void setPathToRules(ResourceReference rulesURL) {
     this.rulesURL = rulesURL;
   }
+  
+  @Deprecated
+  public void setPathToRules(URL rulesURL) {
+    try {
+      this.setPathToRules(new ResourceReference(rulesURL));
+    } catch (URISyntaxException e) {
+      throw new RuntimeException("Error converting URL to ResourceReference", e);
+    }
+  }
 
-  public URL getPathToRules() {
+  public ResourceReference getPathToRules() {
     return rulesURL;
   }
 
