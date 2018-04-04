@@ -16,6 +16,9 @@
 	<groupId>uk.ac.gate.plugins</groupId>
 	<artifactId>lang-bulgarian</artifactId>
 	<version>8.5-SNAPSHOT</version>
+	
+	<name>Language: Bulgarian</name>
+	<description>Support for processing Bulgarian documents</description>
 
 	<licenses>
 		<license>
